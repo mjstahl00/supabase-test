@@ -1,0 +1,711 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Support Requests</title>
+
+    <style>
+      :root {
+        --blue: #1e50c0;
+        --blue-dark: #1a44a3;
+        --border: #e5e7eb;
+        --text: #1f2937;
+        --muted: #6b7280;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+        background: #f5f6f8;
+        color: var(--text);
+      }
+
+      .page {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 40px 24px;
+      }
+
+      /* Header */
+      .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 26px;
+        letter-spacing: -0.01em;
+      }
+
+      .subtitle {
+        margin: 4px 0 0;
+        font-size: 14px;
+        color: var(--muted);
+      }
+
+      /* Summary cards */
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+
+      .stat {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 18px 20px;
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      }
+
+      .stat-label {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .stat-value {
+        font-size: 26px;
+        font-weight: 700;
+      }
+
+      /* Priority filter pills */
+      .filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        font-size: 14px;
+        font-weight: 600;
+        font-family: inherit;
+        color: var(--muted);
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        cursor: pointer;
+        transition:
+          background-color 0.15s,
+          color 0.15s;
+      }
+      .pill:hover {
+        background: #f3f4f6;
+      }
+      .pill:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(30, 80, 192, 0.35);
+      }
+      .pill span {
+        padding: 1px 8px;
+        font-size: 12px;
+        background: #f0f1f3;
+        border-radius: 999px;
+      }
+      .pill.active {
+        color: white;
+        background: var(--blue);
+        border-color: var(--blue);
+      }
+      .pill.active span {
+        color: white;
+        background: rgba(255, 255, 255, 0.25);
+      }
+
+      /* Table */
+      .table-card {
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+        overflow: hidden;
+      }
+
+      .table-scroll {
+        overflow-x: auto;
+      }
+
+      table {
+        width: 100%;
+        min-width: 1000px;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+
+      thead th {
+        padding: 14px 16px;
+        text-align: left;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        white-space: nowrap;
+        color: var(--muted);
+        background: #fafafa;
+        border-bottom: 1px solid var(--border);
+      }
+
+      tbody td {
+        padding: 14px 16px;
+        vertical-align: middle;
+        border-bottom: 1px solid #f0f1f3;
+      }
+
+      tbody tr:last-child td {
+        border-bottom: none;
+      }
+
+      tbody tr:hover {
+        background: #fafbfc;
+      }
+
+      tr.editing,
+      tr.editing:hover {
+        background: #f3f6fd;
+      }
+
+      .num {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .title-cell {
+        font-weight: 600;
+      }
+
+      a {
+        color: var(--blue);
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+
+      .empty {
+        padding: 48px 16px;
+        text-align: center;
+        color: var(--muted);
+      }
+
+      /* Priority badges */
+      .badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: capitalize;
+      }
+      .badge.high {
+        background: #fde8e8;
+        color: #b42318;
+      }
+      .badge.medium {
+        background: #fff4d6;
+        color: #8a5a00;
+      }
+      .badge.low {
+        background: #e3f6e8;
+        color: #1b6b3a;
+      }
+
+      /* Inputs shown while editing */
+      td input,
+      td select {
+        width: 100%;
+        min-width: 90px;
+        padding: 8px 10px;
+        font-size: 14px;
+        font-family: inherit;
+        background: white;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+      }
+
+      td input[data-field="title"] {
+        min-width: 160px;
+      }
+
+      td input:focus,
+      td select:focus {
+        outline: none;
+        border-color: var(--blue);
+        box-shadow: 0 0 0 3px rgba(30, 80, 192, 0.2);
+      }
+
+      /* Buttons */
+      .btn {
+        padding: 10px 18px;
+        font-size: 14px;
+        font-weight: 600;
+        font-family: inherit;
+        color: var(--text);
+        background: white;
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+        cursor: pointer;
+        transition:
+          background-color 0.15s,
+          box-shadow 0.15s;
+      }
+      .btn:hover {
+        background: #f3f4f6;
+      }
+      .btn:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(30, 80, 192, 0.35);
+      }
+
+      .btn.primary {
+        color: white;
+        background: var(--blue);
+        border-color: var(--blue);
+        box-shadow: 0 4px 12px rgba(30, 80, 192, 0.28);
+      }
+      .btn.primary:hover {
+        background: var(--blue-dark);
+      }
+
+      .btn.danger {
+        color: white;
+        background: #c62828;
+        border-color: #c62828;
+      }
+      .btn.danger:hover {
+        background: #a82020;
+      }
+
+      .btn.small {
+        padding: 6px 12px;
+        font-size: 13px;
+        border-radius: 8px;
+        box-shadow: none;
+      }
+
+      .actions-cell {
+        text-align: right;
+        white-space: nowrap;
+      }
+      .actions-cell .btn + .btn {
+        margin-left: 6px;
+      }
+      .confirm-text {
+        margin-right: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #c62828;
+      }
+
+      /* Toast message */
+      .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 28px;
+        transform: translate(-50%, 20px);
+        padding: 12px 20px;
+        font-size: 14px;
+        color: white;
+        background: #111827;
+        border-radius: 10px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+        opacity: 0;
+        pointer-events: none;
+        transition:
+          opacity 0.2s,
+          transform 0.2s;
+      }
+      .toast.show {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+      .toast.error {
+        background: #b42318;
+      }
+
+      @media (max-width: 700px) {
+        .stats {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="page">
+      <header class="page-header">
+        <div>
+          <h1>Support Requests</h1>
+          <p class="subtitle">Track, edit and manage incoming requests.</p>
+        </div>
+        <button id="add-btn" class="btn primary">+ Add request</button>
+      </header>
+
+      <section class="stats">
+        <div class="stat">
+          <span class="stat-label">Requests</span>
+          <span class="stat-value" id="stat-count">0</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Total hours</span>
+          <span class="stat-value" id="stat-hours">0</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Total cost</span>
+          <span class="stat-value" id="stat-cost">$0.00</span>
+        </div>
+      </section>
+
+      <div class="filters" id="filters">
+        <button class="pill active" data-filter="all">
+          All <span id="count-all">0</span>
+        </button>
+        <button class="pill" data-filter="high">
+          High <span id="count-high">0</span>
+        </button>
+        <button class="pill" data-filter="medium">
+          Medium <span id="count-medium">0</span>
+        </button>
+        <button class="pill" data-filter="low">
+          Low <span id="count-low">0</span>
+        </button>
+      </div>
+
+      <section class="table-card">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Requestor</th>
+                <th>Email</th>
+                <th>Priority</th>
+                <th class="num">Hours</th>
+                <th class="num">Cost</th>
+                <th>End date</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script type="module">
+      import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+      const supabase = createClient(
+        "https://zlzslmxwwsawocnbnqil.supabase.co",
+        "sb_publishable_CSjjKsy5s1jtdnguwKXweA_h2OkMPfW",
+      );
+
+      const TABLE = "support_requests";
+
+      // Page state
+      let requests = [];
+      let editingId = null; // a row id, "new", or null
+      let deletingId = null; // a row id waiting for delete confirmation
+      let filter = "all"; // which priority is selected
+      let toastTimer;
+
+      const rowsEl = document.getElementById("rows");
+      const toastEl = document.getElementById("toast");
+      const money = new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+      });
+
+      const blank = () => ({
+        id: "new",
+        title: "",
+        requestor: "",
+        email: "",
+        priority: "medium",
+        hours: null,
+        cost: null,
+        end_date: null,
+      });
+
+      // Escape text so nothing typed into the table can break the page
+      const esc = (v) =>
+        String(v ?? "").replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[c],
+        );
+
+      function formatDate(d) {
+        if (!d) return "—";
+        const [y, m, day] = d.split("-").map(Number);
+        return new Date(y, m - 1, day).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        });
+      }
+
+      function showToast(text, isError = false) {
+        toastEl.textContent = text;
+        toastEl.className = "toast show" + (isError ? " error" : "");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+          toastEl.className = "toast";
+        }, 5000);
+      }
+
+      // A normal (read-only) row
+      function viewRow(r) {
+        const actions =
+          deletingId === r.id
+            ? `<span class="confirm-text">Delete?</span>
+               <button class="btn small danger" data-action="confirm-delete">Yes</button>
+               <button class="btn small" data-action="cancel-delete">No</button>`
+            : `<button class="btn small" data-action="edit">Edit</button>
+               <button class="btn small" data-action="delete">Delete</button>`;
+
+        return `<tr data-id="${r.id}">
+          <td class="title-cell">${esc(r.title)}</td>
+          <td>${esc(r.requestor)}</td>
+          <td><a href="mailto:${esc(r.email)}">${esc(r.email)}</a></td>
+          <td><span class="badge ${esc(r.priority)}">${esc(r.priority)}</span></td>
+          <td class="num">${r.hours ?? "—"}</td>
+          <td class="num">${r.cost == null ? "—" : money.format(r.cost)}</td>
+          <td>${formatDate(r.end_date)}</td>
+          <td class="actions-cell">${actions}</td>
+        </tr>`;
+      }
+
+      // A row with input boxes, used for editing and for adding
+      function editRow(r) {
+        const opt = (value, label) =>
+          `<option value="${value}" ${r.priority === value ? "selected" : ""}>${label}</option>`;
+
+        return `<tr class="editing" data-id="${r.id}">
+          <td><input data-field="title" value="${esc(r.title)}" placeholder="Short summary" /></td>
+          <td><input data-field="requestor" value="${esc(r.requestor)}" placeholder="Name" /></td>
+          <td><input data-field="email" type="email" value="${esc(r.email)}" placeholder="name@company.com" /></td>
+          <td>
+            <select data-field="priority">
+              ${opt("low", "Low")}${opt("medium", "Medium")}${opt("high", "High")}
+            </select>
+          </td>
+          <td><input data-field="hours" type="number" step="0.25" min="0" value="${esc(r.hours)}" /></td>
+          <td><input data-field="cost" type="number" step="0.01" min="0" value="${esc(r.cost)}" /></td>
+          <td><input data-field="end_date" type="date" value="${esc(r.end_date)}" /></td>
+          <td class="actions-cell">
+            <button class="btn small primary" data-action="save">Save</button>
+            <button class="btn small" data-action="cancel">Cancel</button>
+          </td>
+        </tr>`;
+      }
+
+      function render() {
+        // The rows that match the selected filter
+        const visible =
+          filter === "all"
+            ? requests
+            : requests.filter((r) => r.priority === filter);
+
+        let html = "";
+        if (editingId === "new") html += editRow(blank());
+        for (const r of visible) {
+          html += editingId === r.id ? editRow(r) : viewRow(r);
+        }
+        if (!html) {
+          html = `<tr><td colspan="8" class="empty">${
+            requests.length
+              ? "No requests match this filter."
+              : "No requests yet. Click “Add request” to create one."
+          }</td></tr>`;
+        }
+        rowsEl.innerHTML = html;
+
+        // Summary cards follow the filter
+        const hours = visible.reduce((sum, r) => sum + Number(r.hours || 0), 0);
+        const cost = visible.reduce((sum, r) => sum + Number(r.cost || 0), 0);
+        document.getElementById("stat-count").textContent = visible.length;
+        document.getElementById("stat-hours").textContent =
+          hours.toLocaleString("en-US", { maximumFractionDigits: 2 });
+        document.getElementById("stat-cost").textContent = money.format(cost);
+
+        // Pill counts and highlight
+        for (const key of ["all", "high", "medium", "low"]) {
+          const n =
+            key === "all"
+              ? requests.length
+              : requests.filter((r) => r.priority === key).length;
+          document.getElementById("count-" + key).textContent = n;
+        }
+        document.querySelectorAll(".pill").forEach((p) => {
+          p.classList.toggle("active", p.dataset.filter === filter);
+        });
+      }
+
+      async function load() {
+        const { data, error } = await supabase
+          .from(TABLE)
+          .select("*")
+          .order("created_at", { ascending: false });
+        if (error) {
+          showToast(error.message, true);
+          return;
+        }
+        requests = data;
+        render();
+      }
+
+      async function save(tr, id) {
+        const get = (field) =>
+          tr.querySelector(`[data-field="${field}"]`).value.trim();
+
+        const record = {
+          title: get("title"),
+          requestor: get("requestor"),
+          email: get("email"),
+          priority: get("priority"),
+          hours: get("hours") === "" ? null : Number(get("hours")),
+          cost: get("cost") === "" ? null : Number(get("cost")),
+          end_date: get("end_date") === "" ? null : get("end_date"),
+        };
+
+        if (!record.title || !record.requestor || !record.email) {
+          showToast("Title, requestor and email are required.", true);
+          return;
+        }
+
+        let error;
+        if (id === "new") {
+          ({ error } = await supabase.from(TABLE).insert(record));
+        } else {
+          // .select() returns the changed rows, so we can tell if a policy blocked it
+          const result = await supabase
+            .from(TABLE)
+            .update(record)
+            .eq("id", id)
+            .select();
+          error = result.error;
+          if (!error && result.data.length === 0) {
+            error = { message: "Nothing was changed. Check the update policy." };
+          }
+        }
+
+        if (error) {
+          showToast(error.message, true);
+          return;
+        }
+        editingId = null;
+        showToast(id === "new" ? "Request added." : "Changes saved.");
+        await load();
+      }
+
+      async function remove(id) {
+        const { data, error } = await supabase
+          .from(TABLE)
+          .delete()
+          .eq("id", id)
+          .select();
+        deletingId = null;
+        if (error || data.length === 0) {
+          showToast(
+            error
+              ? error.message
+              : "Nothing was deleted. Check the delete policy.",
+            true,
+          );
+          render();
+          return;
+        }
+        showToast("Request deleted.");
+        await load();
+      }
+
+      // One click listener for every button in the table
+      rowsEl.addEventListener("click", async (e) => {
+        const btn = e.target.closest("button[data-action]");
+        if (!btn) return;
+        const tr = btn.closest("tr");
+        const id = tr.dataset.id === "new" ? "new" : Number(tr.dataset.id);
+
+        switch (btn.dataset.action) {
+          case "edit":
+            editingId = id;
+            deletingId = null;
+            render();
+            break;
+          case "cancel":
+            editingId = null;
+            render();
+            break;
+          case "save":
+            await save(tr, id);
+            break;
+          case "delete":
+            deletingId = id;
+            render();
+            break;
+          case "cancel-delete":
+            deletingId = null;
+            render();
+            break;
+          case "confirm-delete":
+            await remove(id);
+            break;
+        }
+      });
+
+      // Enter saves the row, Escape cancels
+      rowsEl.addEventListener("keydown", (e) => {
+        if (!e.target.matches("[data-field]")) return;
+        const tr = e.target.closest("tr");
+        if (e.key === "Enter") tr.querySelector('[data-action="save"]').click();
+        if (e.key === "Escape")
+          tr.querySelector('[data-action="cancel"]').click();
+      });
+
+      // Clicking a filter pill
+      document.getElementById("filters").addEventListener("click", (e) => {
+        const pill = e.target.closest(".pill");
+        if (!pill) return;
+        filter = pill.dataset.filter;
+        render();
+      });
+
+      document.getElementById("add-btn").addEventListener("click", () => {
+        editingId = "new";
+        deletingId = null;
+        render();
+        rowsEl.querySelector('[data-field="title"]')?.focus();
+      });
+
+      load();
+    </script>
+  </body>
+</html>

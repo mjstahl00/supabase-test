@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Support Requests</title>
+
+    <style>
+      :root {
+        --blue: #1e50c0;
+        --border: #e5e7eb;
+        --text: #1f2937;
+        --muted: #6b7280;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+        background: #f5f6f8;
+        color: var(--text);
+      }
+
+      .page {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 40px 24px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 26px;
+        letter-spacing: -0.01em;
+      }
+
+      .subtitle {
+        margin: 4px 0 24px;
+        font-size: 14px;
+        color: var(--muted);
+      }
+
+      .table-card {
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+        overflow: hidden;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+
+      thead th {
+        padding: 14px 16px;
+        text-align: left;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--muted);
+        background: #fafafa;
+        border-bottom: 1px solid var(--border);
+      }
+
+      th.num,
+      td.num {
+        text-align: right;
+        width: 140px;
+      }
+
+      tbody td {
+        padding: 4px 8px;
+        border-bottom: 1px solid #f0f1f3;
+      }
+
+      /* Every cell is an input that looks like plain text until you hover or click it */
+      td input {
+        width: 100%;
+        padding: 10px 8px;
+        font-size: 14px;
+        font-family: inherit;
+        color: inherit;
+        background: transparent;
+        border: 1px solid transparent;
+        border-radius: 8px;
+      }
+
+      td input:hover {
+        background: #f7f8fa;
+      }
+
+      td input:focus {
+        outline: none;
+        background: white;
+        border-color: var(--blue);
+        box-shadow: 0 0 0 3px rgba(30, 80, 192, 0.2);
+      }
+
+      td.num input {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+
+      tfoot td {
+        padding: 14px 16px;
+        font-weight: 700;
+        background: #fafafa;
+      }
+
+      tfoot td.num {
+        font-variant-numeric: tabular-nums;
+      }
+
+      .empty {
+        padding: 36px 16px;
+        text-align: center;
+        color: var(--muted);
+      }
+
+      .add-row {
+        display: block;
+        width: 100%;
+        padding: 14px;
+        font-size: 14px;
+        font-weight: 600;
+        font-family: inherit;
+        color: var(--blue);
+        background: white;
+        border: none;
+        border-top: 1px solid var(--border);
+        cursor: pointer;
+        transition: background-color 0.15s;
+      }
+      .add-row:hover {
+        background: #f3f6fd;
+      }
+      .add-row:focus-visible {
+        outline: none;
+        box-shadow: inset 0 0 0 3px rgba(30, 80, 192, 0.35);
+      }
+
+      .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 28px;
+        transform: translate(-50%, 20px);
+        padding: 12px 20px;
+        font-size: 14px;
+        color: white;
+        background: #111827;
+        border-radius: 10px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+        opacity: 0;
+        pointer-events: none;
+        transition:
+          opacity 0.2s,
+          transform 0.2s;
+      }
+      .toast.show {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+      .toast.error {
+        background: #b42318;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="page">
+      <h1>Support Requests</h1>
+      <p class="subtitle">Click any cell to edit it. Changes save automatically.</p>
+
+      <section class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Requestor</th>
+              <th>Email</th>
+              <th class="num">Cost</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="3">Total</td>
+              <td class="num" id="total">$0.00</td>
+            </tr>
+          </tfoot>
+        </table>
+        <button id="add-row" class="add-row">+ Add row</button>
+      </section>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script type="module">
+      import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+      const supabase = createClient(
+        "https://zlzslmxwwsawocnbnqil.supabase.co",
+        "sb_publishable_CSjjKsy5s1jtdnguwKXweA_h2OkMPfW",
+      );
+
+      const TABLE = "support_requests";
+
+      let items = [];
+      let toastTimer;
+
+      const rowsEl = document.getElementById("rows");
+      const toastEl = document.getElementById("toast");
+      const money = new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+      });
+
+      // Escape text so nothing typed into a cell can break the page
+      const esc = (v) =>
+        String(v ?? "").replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[c],
+        );
+
+      function showToast(text, isError = false) {
+        toastEl.textContent = text;
+        toastEl.className = "toast show" + (isError ? " error" : "");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+          toastEl.className = "toast";
+        }, 3000);
+      }
+
+      function updateTotal() {
+        const total = items.reduce((sum, i) => sum + Number(i.cost || 0), 0);
+        document.getElementById("total").textContent = money.format(total);
+      }
+
+      // Draws every row. Only runs on load and when a row is added.
+      function render() {
+        if (items.length === 0) {
+          rowsEl.innerHTML = `<tr><td colspan="4" class="empty">No rows yet. Click “Add row” to start.</td></tr>`;
+        } else {
+          rowsEl.innerHTML = items
+            .map(
+              (i) => `<tr>
+                <td><input data-id="${i.id}" data-field="title" value="${esc(i.title)}" placeholder="Title" /></td>
+                <td><input data-id="${i.id}" data-field="requestor" value="${esc(i.requestor)}" placeholder="Requestor" /></td>
+                <td><input data-id="${i.id}" data-field="email" type="email" value="${esc(i.email)}" placeholder="Email" /></td>
+                <td class="num"><input data-id="${i.id}" data-field="cost" type="number" step="0.01" min="0" value="${esc(i.cost)}" placeholder="0.00" /></td>
+              </tr>`,
+            )
+            .join("");
+        }
+        updateTotal();
+      }
+
+      async function load() {
+        const { data, error } = await supabase
+          .from(TABLE)
+          .select("*")
+          .order("created_at", { ascending: true })
+          .order("id", { ascending: true });
+        if (error) {
+          showToast(error.message, true);
+          return;
+        }
+        items = data;
+        render();
+      }
+
+      // Add a blank row at the bottom.
+      // Title, requestor, email and priority are required columns,
+      // so the new row starts with empty text and a default priority.
+      async function addRow() {
+        const { data, error } = await supabase
+          .from(TABLE)
+          .insert({ title: "", requestor: "", email: "", priority: "medium" })
+          .select()
+          .single();
+        if (error) {
+          showToast(error.message, true);
+          return;
+        }
+        items.push(data);
+        render();
+        const inputs = rowsEl.querySelectorAll('[data-field="title"]');
+        inputs[inputs.length - 1].focus();
+      }
+
+      // While typing: keep the local copy and the total current
+      rowsEl.addEventListener("input", (e) => {
+        const el = e.target;
+        if (!el.matches("[data-field]")) return;
+        const item = items.find((i) => i.id === Number(el.dataset.id));
+        item[el.dataset.field] =
+          el.dataset.field === "cost"
+            ? el.value === ""
+              ? null
+              : Number(el.value)
+            : el.value;
+        updateTotal();
+      });
+
+      // When you finish with a cell: save it
+      rowsEl.addEventListener("change", async (e) => {
+        const el = e.target;
+        if (!el.matches("[data-field]")) return;
+        const id = Number(el.dataset.id);
+        const field = el.dataset.field;
+        const value =
+          field === "cost"
+            ? el.value === ""
+              ? null
+              : Number(el.value)
+            : el.value.trim();
+
+        const { data, error } = await supabase
+          .from(TABLE)
+          .update({ [field]: value })
+          .eq("id", id)
+          .select();
+
+        if (error || data.length === 0) {
+          showToast(
+            error ? error.message : "Nothing was saved. Check the update policy.",
+            true,
+          );
+          return;
+        }
+        showToast("Saved");
+      });
+
+      // Enter finishes the cell, which saves it
+      rowsEl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && e.target.matches("[data-field]")) {
+          e.target.blur();
+        }
+      });
+
+      document.getElementById("add-row").addEventListener("click", addRow);
+
+      load();
+    </script>
+  </body>
+</html>

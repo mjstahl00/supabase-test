@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Support Request</title>
+
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        background: #f3f2ef;
+        color: #1f1f1f;
+      }
+
+      .card {
+        max-width: 460px;
+        margin: 40px auto;
+        padding: 32px;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+      }
+
+      h1 {
+        margin: 0 0 24px;
+        font-size: 24px;
+        text-align: center;
+      }
+
+      /* Labels in the left column, inputs in the right */
+      .form {
+        display: grid;
+        grid-template-columns: 100px 1fr;
+        gap: 14px;
+        align-items: center;
+      }
+
+      input,
+      select {
+        width: 100%;
+        padding: 12px 14px;
+        background: #fafafa;
+        border: 1px solid #e3e3e3;
+        border-radius: 10px;
+        font-size: 15px;
+        font-family: inherit;
+        box-sizing: border-box;
+      }
+
+      input:focus,
+      select:focus {
+        outline: none;
+        border-color: #1e50c0;
+        box-shadow: 0 0 0 3px rgba(30, 80, 192, 0.2);
+      }
+
+      /* Buttons */
+      .actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 24px;
+      }
+
+      button {
+        padding: 14px 20px;
+        border: none;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        transition:
+          background-color 0.15s,
+          box-shadow 0.15s;
+      }
+
+      button:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(30, 80, 192, 0.35);
+      }
+
+      .submit {
+        flex: 1;
+        color: white;
+        background: #1e50c0;
+        box-shadow: 0 6px 16px rgba(30, 80, 192, 0.3);
+      }
+      .submit:hover {
+        background: #1a44a3;
+      }
+
+      .cancel {
+        color: #374151;
+        background: #eef0f3;
+      }
+      .cancel:hover {
+        background: #e2e5ea;
+      }
+
+      #message {
+        min-height: 1.2em;
+        margin: 16px 0 0;
+        text-align: center;
+        font-size: 14px;
+        color: #555;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="card">
+      <h1>New Support Request</h1>
+
+      <div class="form">
+        <label for="title">Title</label>
+        <input id="title" />
+
+        <label for="requestor">Requestor</label>
+        <input id="requestor" placeholder="Requestor" />
+
+        <label for="email">Email</label>
+        <input id="email" />
+
+        <label for="priority">Priority</label>
+        <select id="priority">
+          <option value="low">Low</option>
+          <option value="medium" selected>Medium</option>
+          <option value="high">High</option>
+        </select>
+      </div>
+
+      <div class="actions">
+        <button class="submit">Submit</button>
+        <button class="cancel">Cancel</button>
+      </div>
+
+      <p id="message"></p>
+    </div>
+
+    <script type="module">
+      import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+      const supabase = createClient(
+        "https://zlzslmxwwsawocnbnqil.supabase.co",
+        "sb_publishable_CSjjKsy5s1jtdnguwKXweA_h2OkMPfW",
+      );
+
+      const message = document.getElementById("message");
+
+      document
+        .querySelector(".submit")
+        .addEventListener("click", async () => {
+          const { error } = await supabase.from("support_requests").insert({
+            title: document.getElementById("title").value,
+            requestor: document.getElementById("requestor").value,
+            email: document.getElementById("email").value,
+            priority: document.getElementById("priority").value,
+          });
+
+          message.textContent = error ? error.message : "Saved!";
+
+          setTimeout(() => {
+            message.textContent = "";
+          }, 5000);
+        });
+    </script>
+  </body>
+</html>
